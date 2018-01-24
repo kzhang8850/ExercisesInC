@@ -2,7 +2,7 @@
 
 ### C Exercises
 
-[Here is a link to the ex01 directory in my repository](https://github.com/YOUR_GITHUB_USERNAME_HERE/ExercisesInC/tree/master/exercises/ex01)
+[Here is a link to the ex01 directory in my repository](https://github.com/kzhang8850/ExercisesInC/tree/master/exercises/ex01)
 
 ### Think OS Chapter 1 reading questions
 
@@ -16,7 +16,7 @@
 
 5) When you run `gcc` with `-S`, why might the results look different on different computers?
 
-6) If you spell a variable name wrong, or if you spell a function name wrong, the error messages 
+6) If you spell a variable name wrong, or if you spell a function name wrong, the error messages
 you get might look very different.  Why?
 
 7) What is a segmentation fault?
