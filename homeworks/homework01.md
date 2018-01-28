@@ -8,7 +8,7 @@
 
 1) Give an example of a feature common in interpreted languages that is rare in compiled languages.
 
-A feature common in interpreted languages but rare in compiled languages is dynamic types. This generally means that interpreted languages declare types at runtime, whereas compiled languages declare them at compilation.
+A feature common in interpreted languages but rare in compiled languages is dynamic types. This generally means that interpreted languages declare types at runtime, whereas compiled languages declare them at compilation. It also means that for compiled languages you can tell what type a variable refers just by looking at the program, whereas the same is not true for interpreted languages.
 
 2) Name two advantages of static typing over dynamic typing.
 
@@ -16,7 +16,7 @@ One advantage is that errors can be found more quickly because checks on the cor
 
 3) Give an example of a static semantic error.
 
-An example is an error where a function is called without the right number of arguments of the wrong type of arguments.
+An example is an error where a function is called without the right number of arguments or the wrong type of arguments.
 
 4) What are two reasons you might want to turn off code optimization?
 
@@ -29,7 +29,7 @@ gcc is usually configured to generate machine code for the machine you are runni
 6) If you spell a variable name wrong, or if you spell a function name wrong, the error messages
 you get might look very different.  Why?
 
-This is because syntax errors and function miscalls are checked in different parts of the compilation process and thus different "entities" of the C language. Spelling a variable name wrong is a syntax error and thus is checked by the compiler. Spelling a function name wrong is considered an undefined function, and thus is checked by the linker. It would then be easy to say that different entities that check different things in the various of the compilation process would produce different error messages.
+This is because syntax errors and function miscalls are checked in different parts of the compilation process and thus different programs that interact with the C language. Spelling a variable name wrong is a syntax error and thus is checked by the compiler. Spelling a function name wrong is considered an undefined function, and thus is checked by the linker. Different programs that check different things in the various steps of the compilation process have different formats, jargon, and wording.
 
 7) What is a segmentation fault?
 

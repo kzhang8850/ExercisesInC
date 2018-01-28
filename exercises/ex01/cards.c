@@ -25,6 +25,7 @@ void get_card_name(char *prompt, char *card_name){
 
 }
 
+
 /*
 uses the input card name to derive a value, based on cases
 
@@ -56,6 +57,7 @@ void get_val(char *card_name, int *val){
     }
 }
 
+
 /*
 uses val to change the count variable based on what range
 val falls into on the number line
@@ -74,6 +76,7 @@ void change_count(int *val, int *count){
     }
     printf("Current count: %i\n", *count);
 }
+
 
 /*the main function, which puts the three functions above together*/
 int main() {

@@ -13,22 +13,18 @@ Lcfi1:
 	movq	%rsp, %rbp
 Lcfi2:
 	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
 	leaq	L_.str(%rip), %rdi
-	movl	$0, -4(%rbp)
-	movb	$0, %al
+	movl	$6, %esi
+	xorl	%eax, %eax
 	callq	_printf
-	xorl	%ecx, %ecx
-	movl	%eax, -8(%rbp)          ## 4-byte Spill
-	movl	%ecx, %eax
-	addq	$16, %rsp
+	xorl	%eax, %eax
 	popq	%rbp
 	retq
 	.cfi_endproc
 
 	.section	__TEXT,__cstring,cstring_literals
 L_.str:                                 ## @.str
-	.asciz	"Hello, World!"
+	.asciz	"Hello, World! %i"
 
 
 .subsections_via_symbols
