@@ -6,6 +6,9 @@
 
 ### Think OS Chapter 1 reading questions
 
+For each of the reading questions below, write answers in the form of
+a clear, concise, complete sentence or two.
+
 1) Give an example of a feature common in interpreted languages that is rare in compiled languages.
 
 A feature common in interpreted languages but rare in compiled languages is dynamic types. This generally means that interpreted languages declare types at runtime, whereas compiled languages declare them at compilation. It also means that for compiled languages you can tell what type a variable refers just by looking at the program, whereas the same is not true for interpreted languages.
