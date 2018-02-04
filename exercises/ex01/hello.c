@@ -42,6 +42,6 @@ functionality. Thus it is in this way that optimization can speed up programs.
 int main() {
     int x = 5;
     int y = x + 1;
-    printf("Hello, World! %i", y);
+    printf("Hello, World! %i\n", y);
     return 0;
 }
