@@ -27,8 +27,24 @@ returns: 1 if true, 0 otherwise
 */
 int endswith(char *s, char *suffix)
 {
-    // TODO: Fill this in!
-    return 0;
+    char *ret = strstr(s, suffix);
+    if (!ret){
+        return 0;
+    }
+    else{
+        char buff[strlen(ret)];
+        memcpy(buff, &s[strlen(s)-strlen(suffix)], strlen(suffix));
+        buff[strlen(suffix)] = '\0';
+        printf("%lu\n", strlen(suffix));
+        printf("%s\n", ret);
+        if(strcmp(buff, ret) == 0){
+            return 1;
+        }
+        else{
+            return 0;
+        }
+    }
+
 }
 
 
