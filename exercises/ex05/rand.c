@@ -89,7 +89,7 @@ double my_random_double()
     } b;
 
     while(1){
-        x = random() << 32 | random();
+        x = (long)random() << 32 | (long)random();
         if (x == 0){
             exp -= 63;
         }
