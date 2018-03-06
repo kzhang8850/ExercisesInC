@@ -25,9 +25,9 @@ int main ()
     // given that these are right next to each other in memory, and var1 is global, i take it that main is next to the global part of the memory stack
     printf ("Address of main is %p\n", main);
     printf ("Address of var1 is %p\n", &var1);
-
-    // pointer in stack that points to constant literal, is near var1 and main in memory as perscribed in the stack
-    printf ("Address of s is %p\n", s);
+    printf ("Address of var2 is %p\n", &var2);
+    printf ("p points to %p\n", p);
+    printf ("s points to %p\n", s);
 
     // from these two lines, it is clear that the heap goes up
     printf ("Address of p is %p\n", p);
