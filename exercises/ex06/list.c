@@ -6,6 +6,10 @@ Copyright 2016 Allen Downey
 License: Creative Commons Attribution-ShareAlike 3.0
 
 */
+/* Edited and completed by Kevin Zhang
+
+A complete linked list module
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,8 +58,16 @@ void print_list(Node **list) {
 * returns: int or -1 if the list is empty
 */
 int pop(Node **list) {
-    // FILL THIS IN!
-    return 0;
+    Node *head = *list;
+    int removed = -1;
+    if(head){
+      *list = head->next;
+      head->next = NULL;
+      removed = head->val;
+      free(head);
+    }
+
+    return removed;
 }
 
 
@@ -65,7 +77,9 @@ int pop(Node **list) {
 * val: value to add
 */
 void push(Node **list, int val) {
-    // FILL THIS IN!
+    Node *head = *list;
+    Node *node = make_node(val, head);
+    *list = node;
 }
 
 
@@ -79,7 +93,26 @@ void push(Node **list, int val) {
 * returns: number of nodes removed
 */
 int remove_by_value(Node **list, int val) {
-    // FILL THIS IN!
+    Node *prev = *list;
+    if(prev->val == val){
+        pop(list);
+        return 1;
+    }
+    Node *current = prev->next;
+
+    while (current != NULL) {
+        if(val == current->val){
+            prev->next = current->next;
+            current->next = NULL;
+            free(current);
+            return 1;
+        }
+        else{
+          current = current->next;
+          prev = prev->next;
+        }
+
+    }
     return 0;
 }
 
@@ -91,7 +124,20 @@ int remove_by_value(Node **list, int val) {
 * list: pointer to pointer to Node
 */
 void reverse(Node **list) {
-    // FILL THIS IN!
+    Node *prev = NULL;
+    Node *current = *list;
+    Node *next = current->next;
+
+    while(current){
+        current->next = prev;
+        prev = current;
+        current = next;
+        if(next){
+            next = next->next;
+        }
+    }
+
+    *list = prev;
 }
 
 
