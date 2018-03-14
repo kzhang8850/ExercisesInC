@@ -53,8 +53,14 @@ void print_list(Node *list) {
 * returns: head of modified list
 */
 Node *pop(Node *list, int *value_p) {
-    // FILL THIS IN
-    return list;
+    Node *head = list;
+    if(head){
+        list = head->next;
+        *value_p = head->val;
+        free(head);
+        return list;
+    }
+    return NULL;
 }
 
 /* Adds a new element to the beginning of the list.
@@ -110,6 +116,26 @@ int main() {
 
     int value;
     list = pop(list, &value);
+    print_list(list);
+    printf("%i\n", value);
+    list = pop(list, &value);
+    print_list(list);
+    printf("%i\n", value);
+    list = pop(list, &value);
+    print_list(list);
+    printf("%i\n", value);
+    list = pop(list, &value);
+    print_list(list);
+    printf("%i\n", value);
+    list = pop(list, &value);
+    print_list(list);
+    printf("%i\n", value);
+
+    list = push(list, 0);
+    print_list(list);
+    list = push(list, 1);
+    print_list(list);
+    list = push(list, 2);
     print_list(list);
 
     list = reverse(list);
