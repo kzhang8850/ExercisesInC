@@ -350,7 +350,7 @@ void print_map(Map *map)
 /* Adds a key-value pair to a map. */
 void map_add(Map *map, Hashable *key, Value *value)
 {
-    int hash = hash_hashable(key)%10;
+    int hash = hash_hashable(key)%(map->n);
     map->lists[hash]= prepend(key, value, map->lists[hash]);
 }
 
@@ -358,7 +358,7 @@ void map_add(Map *map, Hashable *key, Value *value)
 /* Looks up a key and returns the corresponding value, or NULL. */
 Value *map_lookup(Map *map, Hashable *key)
 {
-    int hash = hash_hashable(key)%10;
+    int hash = hash_hashable(key)%(map->n);
     Node *list = map->lists[hash];
     return list_lookup(list, key);
 }
