@@ -4,18 +4,28 @@ Copyright 2014 Allen Downey
 License: GNU GPLv3
 
 
-Read over and experiment with by Kevin Zhang
+Completed by Kevin Zhang
 
-Yes it appears that synchronization errors do occur, in about 70000 spots based
-on my run. This is seen in both the repeated counter prints during the incrementation
-and also the error checking at the end. This is because there's nothing stopping the
-two threads from re-incrementing an element that a thread previously incremented.
-Thus we need something like mutexes.
+SoftSys Spring 2018
+
+It would appear that in this way using a mutex the threads no longer cause
+synchronization errors, as the mutex makes sure that threads only run one at a time
+to prevent double dipping on the same counter. This is seen in the program printing out
+0 errors now instead of 70000 like before.
+
+However, it does take more time. The synchronization imposes over 2 seconds more time
+with the mutex than without:
+
+Counter_Array: .044s
+Counter_Mutex: 2.441s
+
+So this program is more correct, it's just slower due to synchronization overhead.
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include "mutex.h"
 
 #define NUM_CHILDREN 2
 
@@ -38,6 +48,7 @@ typedef struct {
   int counter;
   int end;
   int *array;
+  Mutex *mutex;
 } Shared;
 
 Shared *make_shared(int end)
@@ -47,6 +58,7 @@ Shared *make_shared(int end)
 
   shared->counter = 0;
   shared->end = end;
+  shared->mutex = make_mutex();
 
   shared->array = check_malloc(shared->end * sizeof(int));
   for (i=0; i<shared->end; i++) {
@@ -80,7 +92,9 @@ void child_code(Shared *shared)
   // printf("Starting child at counter %d\n", shared->counter);
 
   while (1) {
+    mutex_lock(shared->mutex);
     if (shared->counter >= shared->end) {
+      mutex_unlock(shared->mutex);
       return;
     }
     shared->array[shared->counter]++;
@@ -89,6 +103,7 @@ void child_code(Shared *shared)
     // if (shared->counter % 10000 == 0) {
     //   printf("%d\n", shared->counter);
     // }
+    mutex_unlock(shared->mutex);
   }
 }
 
