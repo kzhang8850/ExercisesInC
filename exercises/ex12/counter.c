@@ -3,6 +3,22 @@
 Copyright 2014 Allen Downey
 License: GNU GPLv3
 
+Read over and experimented with by Kevin Zhang
+
+It would appear that at 5 children, the counter is almost always successfully incremented to the correct amount.
+
+You can very easily tell that threads are runing concurrently because counter printouts will often
+print the exact same number, meaning that two threads accessed the counter at the same time before
+either one incremented, meaning that they're running concurrently, and with proper synchronization.
+
+However, once you increase the number of children to something like 1000, you start to see
+very obvious synchronization errors, the big one being that sometimes the final counter is no longer matching
+the number of children, meaning that the threads are no longer always incrementing the counter
+to the correct amount. This would mean that in that two threads are probably incrementing at
+the same time, thus both accessing the value before either one increments, and thus both
+increment to the same increased value, and by doing so losing one of the increments
+to a synchronization error.
+
 */
 
 #include <stdio.h>
@@ -13,8 +29,7 @@ License: GNU GPLv3
 #include <sys/types.h>
 #include <unistd.h>
 
-
-#define NUM_CHILDREN 10
+#define NUM_CHILDREN 1000
 
 /* Print an error message and exit.
 */

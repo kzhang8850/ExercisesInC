@@ -3,6 +3,14 @@
 Copyright 2014 Allen Downey
 License: GNU GPLv3
 
+
+Read over and experiment with by Kevin Zhang
+
+Yes it appears that synchronization errors do occur, in about 70000 spots based
+on my run. This is seen in both the repeated counter prints during the incrementation
+and also the error checking at the end. This is because there's nothing stopping the
+two threads from re-incrementing an element that a thread previously incremented.
+Thus we need something like mutexes.
 */
 
 #include <stdio.h>
@@ -13,8 +21,8 @@ License: GNU GPLv3
 
 void perror_exit(char *s)
 {
-    perror(s);
-    exit(-1);
+  perror(s);
+  exit(-1);
 }
 
 void *check_malloc(int size)
@@ -69,39 +77,39 @@ void join_thread(pthread_t thread)
 
 void child_code(Shared *shared)
 {
-    printf("Starting child at counter %d\n", shared->counter);
+  // printf("Starting child at counter %d\n", shared->counter);
 
-    while (1) {
-        if (shared->counter >= shared->end) {
-            return;
-        }
-        shared->array[shared->counter]++;
-        shared->counter++;
-
-        if (shared->counter % 10000 == 0) {
-            printf("%d\n", shared->counter);
-        }
+  while (1) {
+    if (shared->counter >= shared->end) {
+      return;
     }
+    shared->array[shared->counter]++;
+    shared->counter++;
+
+    // if (shared->counter % 10000 == 0) {
+    //   printf("%d\n", shared->counter);
+    // }
+  }
 }
 
 void *entry(void *arg)
 {
-    Shared *shared = (Shared *) arg;
-    child_code(shared);
-    printf("Child done.\n");
-    pthread_exit(NULL);
+  Shared *shared = (Shared *) arg;
+  child_code(shared);
+  // printf("Child done.\n");
+  pthread_exit(NULL);
 }
 
 void check_array(Shared *shared)
 {
     int i, errors=0;
 
-    printf("Checking...\n");
+  // printf("Checking...\n");
 
-    for (i=0; i<shared->end; i++) {
-        if (shared->array[i] != 1) errors++;
-    }
-    printf("%d errors.\n", errors);
+  for (i=0; i<shared->end; i++) {
+    if (shared->array[i] != 1) errors++;
+  }
+  // printf("%d errors.\n", errors);
 }
 
 int main()
