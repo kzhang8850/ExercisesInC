@@ -27,52 +27,52 @@ void perror_exit(char *s)
 
 void *check_malloc(int size)
 {
-  void *p = malloc(size);
-  if (p == NULL) {
-      perror_exit("malloc failed");
-  }
-  return p;
+    void *p = malloc(size);
+    if (p == NULL) {
+        perror_exit("malloc failed");
+    }
+    return p;
 }
 
 typedef struct {
-  int counter;
-  int end;
-  int *array;
+    int counter;
+    int end;
+    int *array;
 } Shared;
 
 Shared *make_shared(int end)
 {
-  int i;
-  Shared *shared = check_malloc(sizeof(Shared));
+    int i;
+    Shared *shared = check_malloc(sizeof(Shared));
 
-  shared->counter = 0;
-  shared->end = end;
+    shared->counter = 0;
+    shared->end = end;
 
-  shared->array = check_malloc(shared->end * sizeof(int));
-  for (i=0; i<shared->end; i++) {
-    shared->array[i] = 0;
-  }
-  return shared;
+    shared->array = check_malloc(shared->end * sizeof(int));
+    for (i=0; i<shared->end; i++) {
+        shared->array[i] = 0;
+    }
+    return shared;
 }
 
 pthread_t make_thread(void *(*entry)(void *), Shared *shared)
 {
-  int ret;
-  pthread_t thread;
+    int ret;
+    pthread_t thread;
 
-  ret = pthread_create(&thread, NULL, entry, (void *) shared);
-  if (ret != 0) {
-      perror_exit("pthread_create failed");
-  }
-  return thread;
+    ret = pthread_create(&thread, NULL, entry, (void *) shared);
+    if (ret != 0) {
+        perror_exit("pthread_create failed");
+    }
+    return thread;
 }
 
 void join_thread(pthread_t thread)
 {
-  int ret = pthread_join(thread, NULL);
-  if (ret == -1) {
-      perror_exit("pthread_join failed");
-  }
+    int ret = pthread_join(thread, NULL);
+    if (ret == -1) {
+        perror_exit("pthread_join failed");
+    }
 }
 
 void child_code(Shared *shared)
@@ -102,7 +102,7 @@ void *entry(void *arg)
 
 void check_array(Shared *shared)
 {
-  int i, errors=0;
+    int i, errors=0;
 
   // printf("Checking...\n");
 
@@ -114,19 +114,19 @@ void check_array(Shared *shared)
 
 int main()
 {
-  int i;
-  pthread_t child[NUM_CHILDREN];
+    int i;
+    pthread_t child[NUM_CHILDREN];
 
-  Shared *shared = make_shared(1000000);
+    Shared *shared = make_shared(1000000);
 
-  for (i=0; i<NUM_CHILDREN; i++) {
-    child[i] = make_thread(entry, shared);
-  }
+    for (i=0; i<NUM_CHILDREN; i++) {
+        child[i] = make_thread(entry, shared);
+    }
 
-  for (i=0; i<NUM_CHILDREN; i++) {
-    join_thread(child[i]);
-  }
+    for (i=0; i<NUM_CHILDREN; i++) {
+        join_thread(child[i]);
+    }
 
-  check_array(shared);
-  return 0;
+    check_array(shared);
+    return 0;
 }
