@@ -24,6 +24,10 @@ to a synchronization error.
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <wait.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define NUM_CHILDREN 1000
 
@@ -89,7 +93,8 @@ void join_thread(pthread_t thread)
 */
 void child_code(Shared *shared)
 {
-    printf("counter = %d\n", shared->counter);
+
+    printf("counter = %i\n", shared->counter);
     shared->counter++;
 }
 
@@ -110,7 +115,7 @@ int main()
     Shared *shared = make_shared();
 
     for (i=0; i<NUM_CHILDREN; i++) {
-        child[i] = make_thread(entry, shared);
+        child[i] = make_thread(entry, (void *)shared);
     }
 
     for (i=0; i<NUM_CHILDREN; i++) {
