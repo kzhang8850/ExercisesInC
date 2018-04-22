@@ -2,11 +2,14 @@
 
 Modified by Allen Downey.
 
-Edited by Kevin Zhang
+Modified by Kevin Zhang
 
 Softsys Spring 2018
 
-I just added some checks on the read_in message, as per the TODOs that were there
+
+Creates a server that can handle incoming multiple clients concurrently
+
+Uses forked processes
 
 */
 
@@ -96,7 +99,14 @@ void bind_to_port(int socket, int port) {
 */
 int say(int socket, char *s)
 {
+    // toggling between these two lines shows
+    // that this script using forked processes will maintain its integrity and continue
+    // running even an error occurs in say
+    // Note: this is not a SegFault as I couldn't figure out how to intentionally
+    // make one, but it still creates an error nonetheless upon runtime, which sufficiently
+    // shows that when using forked processes the server can continue even when children die
     int res = send(socket, s, strlen(s), 0);
+    // int res = send(NULL, s, strlen(s), 0);
     if (res == -1)
         error("Error talking to the client");
     return res;
@@ -155,46 +165,56 @@ int main(int argc, char *argv[])
     if (listen(listener_d, 10) == -1)
         error("Can't listen");
 
-
-
     while (1) {
         printf("Waiting for connection on port %d\n", port);
         int connect_d = open_client_socket();
 
-        if (say(connect_d, intro_msg) == -1) {
-            close(connect_d);
-            continue;
-        }
+        // this is confirmation that this server can handle multiple clients at once.
+        // upon return of open_client_socket, fork a process and run everything below
+        // in the child
+        if(!fork()){
+            // the child closes the listener_d because it doesn't need it
+            close(listener_d);
 
-        read_in(connect_d, buf, sizeof(buf));
-
-        // NEW: checks for correct response
-        if(strncasecmp("Who's there?", buf, 12)){
-            say(connect_d, "You should say 'Who's there?'\n");
-        }
-        else{
-            if (say(connect_d, "Surrealist giraffe.\n") == -1) {
+            // runs the IKKP protocol
+            if (say(connect_d, intro_msg) == -1) {
                 close(connect_d);
                 continue;
             }
 
             read_in(connect_d, buf, sizeof(buf));
-
-            // NEW: checks for correct response
-            if(strncasecmp("Surrealist giraffe who?", buf, 23)){
-                say(connect_d, "You should say 'Surrealist giraffe who?'\n");
+            if(strncasecmp("Who's there?", buf, 12)){
+                say(connect_d, "You should say 'Who's there?'\n");
             }
             else{
-                if (say(connect_d, "Bathtub full of brightly-colored machine tools.\n") == -1) {
+                if (say(connect_d, "Surrealist giraffe.\n") == -1) {
                     close(connect_d);
                     continue;
                 }
 
-            }
+                read_in(connect_d, buf, sizeof(buf));
+                if(strncasecmp("Surrealist giraffe who?", buf, 23)){
+                    say(connect_d, "You should say 'Surrealist giraffe who?'\n");
+                }
+                else{
+                    if (say(connect_d, "Bathtub full of brightly-colored machine tools.\n") == -1) {
+                        close(connect_d);
+                        continue;
+                    }
 
+                }
+
+            }
+            // upon finishing, the child closes its socket and exits out
+            close(connect_d);
+            exit(0);
         }
 
+        // the parent will jump to this point, close the connect_d socket because it's not
+        // using it, and then iterate again in the while loop to wait for another client
+        // all the while pushing clients to a forked process upon accepting them
         close(connect_d);
+
     }
     return 0;
 }

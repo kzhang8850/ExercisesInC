@@ -6,7 +6,9 @@ Edited by Kevin Zhang
 
 Softsys Spring 2018
 
-I just added some checks on the read_in message, as per the TODOs that were there
+Creates a server that can handle incoming multiple clients concurrently
+
+Uses threads
 
 */
 
@@ -20,17 +22,29 @@ I just added some checks on the read_in message, as per the TODOs that were ther
 #include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
+#include <pthread.h>
 
 int listener_d = 0;
 
-/* Print an error message and exit.
+/*
+Print an error message and exit.
 */
 void error(char *msg) {
     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
     exit(1);
 }
 
-/* Set up the signal catcher.
+/*
+Additional error checker for specifically the threads
+*/
+void perror_exit(char *s)
+{
+  perror(s);
+  exit(-1);
+}
+
+/*
+Set up the signal catcher.
 */
 int catch_signal(int sig, void (*handler)(int)) {
     struct sigaction action;
@@ -89,14 +103,20 @@ void bind_to_port(int socket, int port) {
 
     res = bind(socket, (struct sockaddr *)&name, sizeof(name));
     if (res == -1)
-        error("Can't bind to socket");
+        error("Can't binByed to socket");
 }
 
 /* Send to the client.
 */
 int say(int socket, char *s)
 {
+    // toggling between these two lines shows
+    // that this script using threads will break when an error occurs in say
+    // Note: this is not a SegFault as I couldn't figure out how to intentionally
+    // make one, but it still creates an error nonetheless upon runtime, which sufficiently
+    // shows that when using threads the server breaks
     int res = send(socket, s, strlen(s), 0);
+    // int res = send(NULL, s, strlen(s), 0);
     if (res == -1)
         error("Error talking to the client");
     return res;
@@ -137,12 +157,68 @@ int read_in(int socket, char *buf, int len)
     return strlen(buf);
 }
 
+/*
+makes threads with the "thread code" and the connection socket
+*/
+pthread_t make_thread(void *(*entry)(void *), int *connection)
+{
+  int ret;
+  pthread_t thread;
+
+  ret = pthread_create(&thread, NULL, entry, (void *) connection);
+  if (ret != 0) {
+      perror_exit("pthread_create failed");
+  }
+  return thread;
+}
+
 char intro_msg[] = "Internet Knock-Knock Protocol Server\nKnock, knock.\n";
+
+/*
+the thread code, which goes through the knock knock protocol,
+only performed by threads, and then exits out without joining once done
+no shared memory between threads, so no mutexes required
+*/
+void *connection_code(void *arg)
+{
+    char buf[255];
+    int connect_d = *(int *) arg;
+    if (say(connect_d, intro_msg) == -1) {
+        close(connect_d);
+        pthread_exit(NULL);
+    }
+
+    read_in(connect_d, buf, sizeof(buf));
+    if(strncasecmp("Who's there?", buf, 12)){
+        say(connect_d, "You should say 'Who's there?'\n");
+    }
+    else{
+        if (say(connect_d, "Surrealist giraffe.\n") == -1) {
+            close(connect_d);
+            pthread_exit(NULL);
+        }
+
+        read_in(connect_d, buf, sizeof(buf));
+        if(strncasecmp("Surrealist giraffe who?", buf, 23)){
+            say(connect_d, "You should say 'Surrealist giraffe who?'\n");
+        }
+        else{
+            if (say(connect_d, "Bathtub full of brightly-colored machine tools.\n") == -1) {
+                close(connect_d);
+                pthread_exit(NULL);
+            }
+
+        }
+
+    }
+
+    close(connect_d);
+    pthread_exit(NULL);
+
+}
 
 int main(int argc, char *argv[])
 {
-    char buf[255];
-
     // set up the signal handler
     if (catch_signal(SIGINT, handle_shutdown) == -1)
         error("Setting interrupt handler");
@@ -155,46 +231,19 @@ int main(int argc, char *argv[])
     if (listen(listener_d, 10) == -1)
         error("Can't listen");
 
-
-
     while (1) {
         printf("Waiting for connection on port %d\n", port);
         int connect_d = open_client_socket();
 
-        if (say(connect_d, intro_msg) == -1) {
-            close(connect_d);
-            continue;
-        }
+        // this is confirmation that this server can handle multiple clients at once.
+        // upon returning from open_client_socket, spawn a thread and
+        // then the thread handle the rest, it will run its own code
+        // and then exit on its own without joining. this will allow
+        // the parent thread to continue accepting other clients and spawning
+        // threads while the spawned threads do the work with the clients
+        // the parent accepted
+        pthread_t tid = make_thread(connection_code, &connect_d);
 
-        read_in(connect_d, buf, sizeof(buf));
-
-        // NEW: checks for correct response
-        if(strncasecmp("Who's there?", buf, 12)){
-            say(connect_d, "You should say 'Who's there?'\n");
-        }
-        else{
-            if (say(connect_d, "Surrealist giraffe.\n") == -1) {
-                close(connect_d);
-                continue;
-            }
-
-            read_in(connect_d, buf, sizeof(buf));
-
-            // NEW: checks for correct response
-            if(strncasecmp("Surrealist giraffe who?", buf, 23)){
-                say(connect_d, "You should say 'Surrealist giraffe who?'\n");
-            }
-            else{
-                if (say(connect_d, "Bathtub full of brightly-colored machine tools.\n") == -1) {
-                    close(connect_d);
-                    continue;
-                }
-
-            }
-
-        }
-
-        close(connect_d);
     }
     return 0;
 }
