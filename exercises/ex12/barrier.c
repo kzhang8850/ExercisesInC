@@ -11,13 +11,14 @@ License: GNU GPLv3
 #include <pthread.h>
 #include "utils.h"
 
-#define NUM_CHILDREN 5
+#define NUM_CHILDREN 10
 
 /* Structure that contains variables shared between threads.
 */
 typedef struct {
     int counter;
     Mutex *mutex;
+    Cond *cond;
 } Shared;
 
 /* Allocate the shared structure.
@@ -27,6 +28,7 @@ Shared *make_shared()
     Shared *shared = check_malloc(sizeof(Shared));
     shared->counter = 0;
     shared->mutex = make_mutex();
+    shared->cond = make_cond();
     return shared;
 }
 
@@ -43,14 +45,19 @@ void child_code(Shared *shared)
     // Notice that the `Shared` structure already contains a Mutex
     // you can use; you may add one or more additional Mutex or Cond
     // objects.
+    mutex_lock(shared->mutex);
 
     printf("Child part 1\n");
     shared->counter++;
     while (shared->counter < NUM_CHILDREN) {
         // do nothing
         // Running this loop over and over is called busy waiting.
+        cond_wait(shared->cond, shared->mutex);
     }
     printf("Child part 2\n");
+
+    mutex_unlock(shared->mutex);
+    cond_signal(shared->cond);
 }
 
 /* Entry point for the child threads.
