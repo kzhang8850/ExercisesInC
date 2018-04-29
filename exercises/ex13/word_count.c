@@ -8,6 +8,10 @@ http://www.ibm.com/developerworks/linux/tutorials/l-glib/section5.html
 
 Note: this version leaks memory.
 
+Completed by Kevin Zhang
+
+Demonstrates a lot of glib memory leaks, and how to fix them.
+
 */
 
 #include <stdio.h>
@@ -50,8 +54,7 @@ void accumulator(gpointer key, gpointer value, gpointer user_data)
 {
     GSequence *seq = (GSequence *) user_data;
     Pair *pair = g_new(Pair, 1);
-    gchar *new_key = g_new(gchar, 1);
-    strcpy(new_key, key);
+    gchar *new_key = g_strdup(key); // duplicate the string for new copying
     pair->word = new_key;
     pair->freq = *(gint *)value;
 
@@ -68,9 +71,8 @@ void incr(GHashTable* hash, gchar *key)
 
     if (val == NULL) {
         gint *val1 = g_new(gint, 1);
-        gchar *new_key = g_new(gchar, 1);
+        gchar *new_key = g_strdup(key);  //duplicate the string for new copying
         *val1 = 1;
-        strcpy(new_key, key);
         g_hash_table_insert(hash, new_key, val1);
     }
     else {
@@ -78,18 +80,23 @@ void incr(GHashTable* hash, gchar *key)
     }
 }
 
+/*destructor for hash table keys*/
 void free_hash_key(gpointer key)
 {
 
     g_free(key);
 
 }
+
+/*destructor for hash table values*/
 void free_hash_value(gpointer value)
 {
 
     g_free(value);
 
 }
+
+/*destructor for sequence items*/
 void free_seq_item(gpointer value)
 {
     Pair *real_val = (Pair *) value;
@@ -97,14 +104,10 @@ void free_seq_item(gpointer value)
     g_free((gpointer)real_val);
 }
 
-void remove_a_key(gpointer key, gpointer user_data)
-{
-    GHashTable* hash = (GHashTable*) user_data;
-    gconstpointer the_key = *(gconstpointer*) key;
-    g_hash_table_remove(hash, the_key);
-}
+
 int main(int argc, char** argv)
 {
+
     gchar *filename;
 
     // open the file
@@ -124,6 +127,8 @@ int main(int argc, char** argv)
     (one-L) NUL terminated strings */
     gchar **array;
     gchar line[128];
+
+    // initialize the hash table with cleanup functions
     GHashTable* hash = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify) free_hash_key, (GDestroyNotify) free_hash_value);
 
     // read lines from the file and build the hash table
@@ -135,24 +140,22 @@ int main(int argc, char** argv)
         for (int i=0; array[i] != NULL; i++) {
             incr(hash, array[i]);
         }
+        g_strfreev(array); // free the array after every use because it's dynamically allocated every time through g_strsplit
     }
     fclose(fp);
 
     // print the hash table
     // g_hash_table_foreach(hash, (GHFunc) kv_printor, "Word %s freq %d\n");
 
-    // iterate the hash table and build the sequence
+    // iterate the hash table and build the sequence using destructor functions
     GSequence *seq = g_sequence_new((GDestroyNotify) free_seq_item);
+
     g_hash_table_foreach(hash, (GHFunc) accumulator, (gpointer) seq);
 
     // iterate the sequence and print the pairs
     g_sequence_foreach(seq, (GFunc) pair_printor, NULL);
 
-    // try (unsuccessfully) to free everything
-    // g_hash_table_foreach(hash, (GHFunc) free_hash, NULL);
-    GList* keys = g_hash_table_get_keys(hash);
-    g_list_foreach(keys, (GFunc) remove_a_key, (gpointer) hash);
-    g_list_free(keys);
+    // free up the sequence and the hash table, now with appropriate freeing capabilities
     g_sequence_free(seq);
     g_hash_table_destroy(hash);
 
