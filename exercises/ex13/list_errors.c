@@ -5,6 +5,11 @@ Based on an example from http://www.learn-c.org/en/Linked_lists
 Copyright 2016 Allen Downey
 License: Creative Commons Attribution-ShareAlike 3.0
 
+Completed and edited by Kevin ZHang
+SoftSys Spring 2018
+
+Demonstrates freeing up dynamically allocated memory
+
 */
 
 #include <stdio.h>
@@ -176,8 +181,22 @@ Node *make_something() {
     int val = pop(&node1);
     push(&node2, val);
     node3->next = node2;
-
     return node3;
+}
+
+/*
+this function is the one I added, it frees up mallocs in a list
+
+list: the list to be freed
+*/
+void free_list(Node **list){
+    Node *node = *list;
+    Node *next = node;
+    while(next != NULL){
+        next = next->next;
+        free(node);
+        node = next;
+    }
 }
 
 
@@ -208,8 +227,11 @@ int main() {
     insert_by_index(&empty, 1, 0);
     print_list(&empty);
 
+    free_list(&test_list);
+    free_list(&empty);
+
     Node *something = make_something();
-    free(something);
+    free_list(&something);
 
     return 0;
 }

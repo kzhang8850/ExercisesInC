@@ -14,6 +14,7 @@ Note: this version leaks memory.
 #include <stdlib.h>
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <string.h>
 
 /* Represents a word-frequency pair. */
 typedef struct {
@@ -49,8 +50,10 @@ void accumulator(gpointer key, gpointer value, gpointer user_data)
 {
     GSequence *seq = (GSequence *) user_data;
     Pair *pair = g_new(Pair, 1);
-    pair->word = (gchar *) key;
-    pair->freq = *(gint *) value;
+    gchar *new_key = g_new(gchar, 1);
+    strcpy(new_key, key);
+    pair->word = new_key;
+    pair->freq = *(gint *)value;
 
     g_sequence_insert_sorted(seq,
         (gpointer) pair,
@@ -65,13 +68,41 @@ void incr(GHashTable* hash, gchar *key)
 
     if (val == NULL) {
         gint *val1 = g_new(gint, 1);
+        gchar *new_key = g_new(gchar, 1);
         *val1 = 1;
-        g_hash_table_insert(hash, key, val1);
-    } else {
+        strcpy(new_key, key);
+        g_hash_table_insert(hash, new_key, val1);
+    }
+    else {
         *val += 1;
     }
 }
 
+void free_hash_key(gpointer key)
+{
+
+    g_free(key);
+
+}
+void free_hash_value(gpointer value)
+{
+
+    g_free(value);
+
+}
+void free_seq_item(gpointer value)
+{
+    Pair *real_val = (Pair *) value;
+    g_free((gpointer)real_val->word);
+    g_free((gpointer)real_val);
+}
+
+void remove_a_key(gpointer key, gpointer user_data)
+{
+    GHashTable* hash = (GHashTable*) user_data;
+    gconstpointer the_key = *(gconstpointer*) key;
+    g_hash_table_remove(hash, the_key);
+}
 int main(int argc, char** argv)
 {
     gchar *filename;
@@ -93,7 +124,7 @@ int main(int argc, char** argv)
     (one-L) NUL terminated strings */
     gchar **array;
     gchar line[128];
-    GHashTable* hash = g_hash_table_new(g_str_hash, g_str_equal);
+    GHashTable* hash = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify) free_hash_key, (GDestroyNotify) free_hash_value);
 
     // read lines from the file and build the hash table
     while (1) {
@@ -111,15 +142,19 @@ int main(int argc, char** argv)
     // g_hash_table_foreach(hash, (GHFunc) kv_printor, "Word %s freq %d\n");
 
     // iterate the hash table and build the sequence
-    GSequence *seq = g_sequence_new(NULL);
+    GSequence *seq = g_sequence_new((GDestroyNotify) free_seq_item);
     g_hash_table_foreach(hash, (GHFunc) accumulator, (gpointer) seq);
 
     // iterate the sequence and print the pairs
     g_sequence_foreach(seq, (GFunc) pair_printor, NULL);
 
     // try (unsuccessfully) to free everything
-    g_hash_table_destroy(hash);
+    // g_hash_table_foreach(hash, (GHFunc) free_hash, NULL);
+    GList* keys = g_hash_table_get_keys(hash);
+    g_list_foreach(keys, (GFunc) remove_a_key, (gpointer) hash);
+    g_list_free(keys);
     g_sequence_free(seq);
+    g_hash_table_destroy(hash);
 
     return 0;
 }
