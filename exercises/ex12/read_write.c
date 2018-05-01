@@ -42,14 +42,29 @@ Shared *make_shared()
 */
 void reader_code(Shared *shared)
 {
+    mutex_lock(shared->mutex);
+    shared->counter++;
+    // cond_wait(shared->cond, shared->mutex);
+    mutex_unlock(shared->mutex);
     printf("I am reading the thing.\n");
+    mutex_lock(shared->mutex);
+    shared->counter--;
+    if(shared->counter == 0) cond_signal(shared->cond);
+    mutex_unlock(shared->mutex);
 }
 
 /* Code run by the writer threads.
 */
 void writer_code(Shared *shared)
 {
+    mutex_lock(shared->mutex);
+    while(shared->counter > 0){
+        printf("I'm a writer and I'm waiting\n");
+        cond_wait(shared->cond, shared->mutex);
+    }
     printf("I am writing the thing.\n");
+    mutex_unlock(shared->mutex);
+    cond_signal(shared->cond);
 }
 
 /* Entry point for the reader threads.
@@ -108,6 +123,8 @@ int main()
     for (int i=0; i<NUM_WRITERS; i++) {
         writers[i] = make_thread(writer_entry, shared);
     }
+
+
 
     for (int i=0; i<NUM_READERS; i++) {
         join_thread(readers[i]);

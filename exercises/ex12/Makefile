@@ -1,4 +1,4 @@
-all: counter array_counter counter_mutex
+all: counter counter_mutex read_write
 counter: counter.c
 	gcc -Wall -o counter counter.c -lpthread
 
